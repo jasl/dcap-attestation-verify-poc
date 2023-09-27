@@ -1,4 +1,4 @@
-use sgx_dcap_quoteverify_rs as qvl;
+use intel_tee_quote_verification_rs as qvl;
 use std::{fs, time};
 
 pub struct QuoteBag {

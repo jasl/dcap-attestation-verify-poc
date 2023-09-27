@@ -1,5 +1,5 @@
 use std::fs;
-use sgx_dcap_quoteverify_rs as qvl;
+use intel_tee_quote_verification_rs as qvl;
 
 mod quote_generator;
 
