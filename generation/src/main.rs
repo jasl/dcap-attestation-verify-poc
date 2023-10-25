@@ -1,5 +1,5 @@
+use std::ffi::CStr;
 use std::fs;
-use intel_tee_quote_verification_rs as qvl;
 
 mod quote_generator;
 
@@ -9,13 +9,11 @@ fn main() {
     // DCAP SGX still trying to get supplemental from enclave!
     // quote_generator::quote_verification(&quote_bag.quote, &quote_bag.quote_collateral);
 
-    let quote_collateral: &qvl::sgx_ql_qve_collateral_t = &unsafe {
-        *(quote_bag.quote_collateral.as_ptr() as *const qvl::sgx_ql_qve_collateral_t)
-    };
+    let quote_collateral = quote_bag.quote_collateral;
 
     println!("Collateral Version:");
-    let major_version = unsafe { quote_collateral.__bindgen_anon_1.__bindgen_anon_1.major_version };
-    let minor_version = unsafe { quote_collateral.__bindgen_anon_1.__bindgen_anon_1.minor_version };
+    let major_version = quote_collateral.major_version;
+    let minor_version = quote_collateral.minor_version;
     println!("{}.{}", major_version, minor_version);
 
     println!("Collateral TEE type:");
@@ -23,93 +21,72 @@ fn main() {
     println!("{}", tee_type);
 
     println!("Collateral PCK CRL issuer chain size:");
-    println!("{}", quote_collateral.pck_crl_issuer_chain_size);
+    println!("{}", quote_collateral.pck_crl_issuer_chain.len());
     println!("Collateral PCK CRL issuer chain data:");
-    let pck_crl_issuer_chain = unsafe {
-        let slice = core::slice::from_raw_parts(
-            quote_collateral.pck_crl_issuer_chain as *const u8,
-            (quote_collateral.pck_crl_issuer_chain_size - 1) as usize // trim last '\0'
-        );
-
-        core::str::from_utf8(slice).expect("Collateral PCK CRL issuer chain should an UTF-8 string")
+    let pck_crl_issuer_chain = {
+        let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.pck_crl_issuer_chain.as_ptr()) };
+        let str_slice: &str = c_str.to_str().expect("Collateral PCK CRL issuer chain should an UTF-8 string");
+        str_slice.to_owned()
     };
     println!("{}", pck_crl_issuer_chain);
 
     println!("Collateral ROOT CA CRL size:");
-    println!("{}", quote_collateral.root_ca_crl_size);
+    println!("{}", quote_collateral.root_ca_crl.len());
     println!("Collateral ROOT CA CRL data:");
-    let root_ca_crl = unsafe {
-        let slice = core::slice::from_raw_parts(
-            quote_collateral.root_ca_crl as *const u8,
-            (quote_collateral.root_ca_crl_size - 1) as usize // trim last '\0'
-        );
-
-        slice.to_vec()
+    let root_ca_crl = {
+        let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.root_ca_crl.as_ptr()) };
+        let str_slice: &str = c_str.to_str().expect("ROOT CA CRL should an UTF-8 string");
+        str_slice.to_owned()
     };
     println!("0x{}", hex::encode(root_ca_crl.clone()));
 
     println!("Collateral PCK CRL size:");
-    println!("{}", quote_collateral.pck_crl_size);
+    println!("{}", quote_collateral.pck_crl.len());
     println!("Collateral PCK CRL data:");
-    let pck_crl = unsafe {
-        let slice = core::slice::from_raw_parts(
-            quote_collateral.pck_crl as *const u8,
-            (quote_collateral.pck_crl_size - 1) as usize // trim last '\0'
-        );
-
-        slice.to_vec()
+    let pck_crl = {
+        let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.pck_crl.as_ptr()) };
+        let str_slice: &str = c_str.to_str().expect("PCK CRL should an UTF-8 string");
+        str_slice.to_owned()
     };
     println!("0x{}", hex::encode(pck_crl.clone()));
 
     println!("Collateral TCB info issuer chain size:");
-    println!("{}", quote_collateral.tcb_info_issuer_chain_size);
+    println!("{}", quote_collateral.tcb_info_issuer_chain.len());
     println!("Collateral TCB info issuer chain data:");
-    let tcb_info_issuer_chain = unsafe {
-        let slice = core::slice::from_raw_parts(
-            quote_collateral.tcb_info_issuer_chain as *const u8,
-            (quote_collateral.tcb_info_issuer_chain_size - 1) as usize, // trim last '\0'
-        );
-
-        core::str::from_utf8(slice).expect("Collateral TCB info issuer chain should an UTF-8 string")
+    let tcb_info_issuer_chain = {
+        let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.tcb_info_issuer_chain.as_ptr()) };
+        let str_slice: &str = c_str.to_str().expect("TCB Info issuer should an UTF-8 string");
+        str_slice.to_owned()
     };
     println!("{}", tcb_info_issuer_chain);
 
     println!("Collateral TCB info size:");
-    println!("{}", quote_collateral.tcb_info_size);
+    println!("{}", quote_collateral.tcb_info.len());
     println!("Collateral TCB info data:");
-    let tcb_info = unsafe {
-        let slice = core::slice::from_raw_parts(
-            quote_collateral.tcb_info as *const u8,
-            (quote_collateral.tcb_info_size - 1) as usize // trim last '\0'
-        );
-
-        core::str::from_utf8(slice).expect("Collateral TCB info should an UTF-8 string")
+    let tcb_info = {
+        let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.tcb_info.as_ptr()) };
+        let str_slice: &str = c_str.to_str().expect("TCB Info should an UTF-8 string");
+        str_slice.to_owned()
     };
     println!("{}", tcb_info);
 
     println!("Collateral QE identity issuer chain size:");
-    println!("{}", quote_collateral.qe_identity_issuer_chain_size);
+    println!("{}", quote_collateral.qe_identity_issuer_chain.len());
     println!("Collateral QE identity issuer chain data:");
-    let qe_identity_issuer_chain = unsafe {
-        let slice = core::slice::from_raw_parts(
-            quote_collateral.qe_identity_issuer_chain as *const u8,
-            (quote_collateral.qe_identity_issuer_chain_size - 1) as usize // trim last '\0'
-        );
-
-        core::str::from_utf8(slice).expect("Collateral QE identity issuer chain should an UTF-8 string")
+    let qe_identity_issuer_chain = {
+        let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.qe_identity_issuer_chain.as_ptr()) };
+        let str_slice: &str = c_str.to_str().expect("QE Identity issuer chain should an UTF-8 string");
+        str_slice.to_owned()
     };
     println!("{}", qe_identity_issuer_chain);
 
     println!("Collateral QE Identity size:");
-    println!("{}", quote_collateral.qe_identity_size);
+    println!("{}", quote_collateral.qe_identity.len());
     println!("Collateral QE identity data:");
-    let qe_identity = unsafe {
-        let slice = core::slice::from_raw_parts(
-            quote_collateral.qe_identity as *const u8,
-            (quote_collateral.qe_identity_size - 1) as usize // trim last '\0'
-        );
-
-        core::str::from_utf8(slice).expect("Collateral QE Identity should an UTF-8 string")
+    let qe_identity = {
+        let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.qe_identity.as_ptr()) };
+        let str_slice: &str = c_str.to_str().expect("QE Identity should an UTF-8 string");
+        str_slice.to_owned()
     };
     println!("{}", qe_identity);
 

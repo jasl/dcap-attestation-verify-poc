@@ -1,10 +1,12 @@
+use intel_tee_quote_verification_sys as qvl_sys;
 use intel_tee_quote_verification_rs as qvl;
 use std::{fs, time};
+use intel_tee_quote_verification_rs::QuoteCollateral;
 
 pub struct QuoteBag {
     // TODO: Version of the bag
     pub quote: Vec<u8>,
-    pub quote_collateral: Vec<u8>,
+    pub quote_collateral: QuoteCollateral,
 }
 
 pub fn create_quote_bag(data: &[u8]) -> QuoteBag {
@@ -29,7 +31,7 @@ pub fn create_quote_bag(data: &[u8]) -> QuoteBag {
 }
 
 #[allow(dead_code)]
-pub fn quote_verification(quote: &[u8], quote_collateral: &[u8]) {
+pub fn quote_verification(quote: &[u8], quote_collateral: &QuoteCollateral) {
     // set current time. This is only for sample purposes, in production mode a trusted time should be used.
     //
     let current_time: u64 = time::SystemTime::now().duration_since(time::SystemTime::UNIX_EPOCH).unwrap().as_secs().try_into().unwrap();
@@ -38,12 +40,12 @@ pub fn quote_verification(quote: &[u8], quote_collateral: &[u8]) {
     // here you can choose 'trusted' or 'untrusted' quote verification by specifying parameter '&qve_report_info'
     // if '&qve_report_info' is NOT NULL, this API will call Intel QvE to verify quote
     // if '&qve_report_info' is NULL, this API will call 'untrusted quote verify lib' to verify quote, this mode doesn't rely on SGX capable system, but the results can not be cryptographically authenticated
-    let mut quote_verification_result = qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_UNSPECIFIED;
+    let mut quote_verification_result = qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_UNSPECIFIED;
     let mut collateral_expiration_status = 1u32;
 
     match qvl::tee_verify_quote(
         &quote,
-        Some(&quote_collateral),
+        Some(quote_collateral),
         current_time as i64,
         None,
         None,
@@ -58,7 +60,7 @@ pub fn quote_verification(quote: &[u8], quote_collateral: &[u8]) {
     // check verification result
 
     match quote_verification_result {
-        qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_OK => {
+        qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_OK => {
             // check verification collateral expiration status
             // this value should be considered in your own attestation/verification policy
             //
@@ -68,16 +70,16 @@ pub fn quote_verification(quote: &[u8], quote_collateral: &[u8]) {
                 println!("\tWarning: App: Verification completed, but collateral is out of date based on 'expiration_check_date' you provided.");
             }
         }
-        qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_CONFIG_NEEDED
-        | qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_OUT_OF_DATE
-        | qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_OUT_OF_DATE_CONFIG_NEEDED
-        | qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_SW_HARDENING_NEEDED
-        | qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED => {
+        qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_CONFIG_NEEDED
+        | qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_OUT_OF_DATE
+        | qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_OUT_OF_DATE_CONFIG_NEEDED
+        | qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_SW_HARDENING_NEEDED
+        | qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED => {
             println!("\tWarning: App: Verification completed with Non-terminal result: {:x}", quote_verification_result as u32);
         }
-        qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_INVALID_SIGNATURE
-        | qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_REVOKED
-        | qvl::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_UNSPECIFIED
+        qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_INVALID_SIGNATURE
+        | qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_REVOKED
+        | qvl_sys::sgx_ql_qv_result_t::SGX_QL_QV_RESULT_UNSPECIFIED
         | _ => {
             println!("\tError: App: Verification completed with Terminal result: {:x}", quote_verification_result as u32);
         }

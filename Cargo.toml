@@ -7,20 +7,21 @@ edition = "2021"
 
 [dependencies]
 hex = { version = "0.4.3", default-features = false, features = ["alloc", "serde"] }
-byteorder = { version = "1", default-features = false }
-chrono = { version = "0.4.22", default-features = false, features = ["alloc", "serde"] }
-serde = { version = "1.0.144", default-features = false, features = ["alloc", "derive"] }
-serde_json = { version = "1.0.85", default-features = false, features = ["alloc"] }
-x509-cert = { version = "0.1.0", default-features = false, features = ["alloc", "pem"] }
-der = { version = "0.6.0", default-features = false, features = ["alloc", "pem"] }
-ecdsa = { version = "0.14.7", default-features = false, features = ["alloc", "pem"] }
-p256 = { version = "0.11.1", default-features = false, features = ["arithmetic", "ecdsa", "pkcs8"] }
+byteorder = { version = "1.5.0", default-features = false }
+chrono = { version = "0.4.31", default-features = false, features = ["alloc", "serde"] }
+serde = { version = "1.0.188", default-features = false, features = ["alloc", "derive"] }
+serde_json = { version = "1.0.107", default-features = false, features = ["alloc"] }
 
-ring = { version = "0.16.20", default-features = false, features = ["alloc"] }
-webpki = { version = "0.22.0", default-features = false, features = ["alloc"] }
-#rustls-pemfile = { version = "1.0.1" }
+webpki = { package = "rustls-webpki", git = "https://github.com/rustls/webpki.git", default-features = false, features = ["alloc", "ring"] }
+const-oid = "0.9.5"
 
-pem = "1"
+ecdsa = { version = "0.16.8", default-features = false, features = ["alloc", "pem"] }
+p256 = { version = "0.13.2", default-features = false, features = ["arithmetic", "ecdsa", "pkcs8"] }
 
-log = { version = "0.4.17", default-features = false }
-anyhow = "1.0"
+log = { version = "0.4.20", default-features = false }
+anyhow = "1.0.75"
+thiserror = "1.0.50"
+base64 = "0.21.4"
+
+# [patch.crates-io]
+# ring = { git = "https://github.com/jasl/ring-xous.git", branch = "better-wasm32-support" }

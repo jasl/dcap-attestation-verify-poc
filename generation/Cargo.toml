@@ -9,6 +9,10 @@ edition = "2021"
 hex = { version = "0.4.3", default-features = false, features = ["alloc", "serde"] }
 chrono = { version = "0.4.31", default-features = false, features = ["alloc", "serde"] }
 intel-tee-quote-verification-rs = { path = "./vendor/sgx-dcap-quoteverify-rs" } # { path = "../vendor/sgx-dcap-quoteverify-rs" }
+intel-tee-quote-verification-sys = { path = "./vendor/sgx-dcap-quoteverify-sys" }
 
 log = { version = "0.4.20", default-features = false }
 anyhow = "1.0"
+
+[features]
+TD_ENV = []

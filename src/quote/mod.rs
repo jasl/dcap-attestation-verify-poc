@@ -1,8 +1,7 @@
 use core::result::Result;
-use core::fmt;
 use core::fmt::Debug;
 use byteorder::{ByteOrder, LittleEndian};
-use ecdsa::signature::Signature;
+use ecdsa::Signature;
 
 const ENCLAVE_REPORT_BYTE_LEN: usize = 384;
 
@@ -257,7 +256,7 @@ impl QuoteAuthData {
 
     fn new_ecdsa256_with_p256_curve(raw_data: &[u8]) -> Result<Self, ParseError> {
         let raw_signature = &raw_data[..64];
-        let signature = Ecdsa256BitSignature::from_bytes(raw_signature).expect("Parse error");
+        let signature = Ecdsa256BitSignature::from_bytes(raw_signature.into()).expect("Parse error");
 
         let raw_attestation_key = &raw_data[64..128];
         let encoded_point = p256::EncodedPoint::from_untagged_bytes(raw_attestation_key.into());
@@ -267,7 +266,7 @@ impl QuoteAuthData {
         let qe_report = EnclaveReport::from_slice(raw_qe_report).expect("Parse error");
 
         let raw_qe_report_signature = &raw_data[512..576];
-        let qe_report_signature = Ecdsa256BitSignature::from_bytes(raw_qe_report_signature).expect("Parse error");
+        let qe_report_signature = Ecdsa256BitSignature::from_bytes(raw_qe_report_signature.into()).expect("Parse error");
 
         let qe_auth_data_size = LittleEndian::read_u16(&raw_data[576..578]) as usize;
         let qe_auth_data = raw_data[578..(578 + qe_auth_data_size)].to_vec();

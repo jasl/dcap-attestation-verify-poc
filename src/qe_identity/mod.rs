@@ -22,7 +22,6 @@ impl fmt::Display for EnclaveIdentityVersion {
     }
 }
 
-
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum EnclaveId {
     QE,
