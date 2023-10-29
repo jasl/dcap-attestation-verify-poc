@@ -35,13 +35,16 @@ const QUOTE_MIN_BYTE_LEN: usize = // Actual minimal size is a Quote V3 with Encl
 
 const INTEL_QE_VENDOR_ID: [u8; 16] = [0x93, 0x9A, 0x72, 0x33, 0xF7, 0x9C, 0x4C, 0xA9, 0x94, 0x0A, 0x0D, 0xB3, 0x95, 0x7F, 0x06, 0x07];
 
+const TEE_TYPE_SGX: u32 = 0u32;
+
 #[derive(Debug)]
 pub enum ParseError {
     Invalid,
     Unexpected { field: String, message: String },
     UnsupportedValue { field: String },
     InvalidValue { field: String },
-    MissingField { field: String }
+    MissingField { field: String },
+    ValidateError,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -105,14 +108,16 @@ impl Header {
             3 => AttestationKeyType::ECDSA384WithP384Curve,
             _ => AttestationKeyType::Unsupported { raw: attestation_key_type }
         };
+        // The doc says 3 (ECDSA-384-with-P-384 curve) currently not supported
         if !matches!(attestation_key_type, AttestationKeyType::ECDSA256WithP256Curve) {
             return Err(ParseError::Invalid)
         }
 
-        // TODO: Validate TEE type, version 3 must be TEE_TYPE_SGX
-        
+        if tee_type != TEE_TYPE_SGX {
+            return Err(ParseError::UnsupportedValue { field: "tee_type".to_string() })
+        }
         if qe_vendor_id != INTEL_QE_VENDOR_ID {
-            return Err(ParseError::Invalid)
+            return Err(ParseError::UnsupportedValue { field: "qe_vendor_id".to_string() })
         }
 
         Ok(

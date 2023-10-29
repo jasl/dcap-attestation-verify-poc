@@ -26,7 +26,7 @@ impl fmt::Display for EnclaveIdentityVersion {
 pub enum EnclaveId {
     QE,
     QVE,
-    TD_QE,
+    TdQE,
     Unknown { id: String },
 }
 
@@ -35,7 +35,7 @@ impl fmt::Display for EnclaveId {
         match self {
             EnclaveId::QE => write!(f, "QE"),
             EnclaveId::QVE => write!(f, "QVE"),
-            EnclaveId::TD_QE => write!(f, "TD_QE"),
+            EnclaveId::TdQE => write!(f, "TD_QE"),
             EnclaveId::Unknown { id } => write!(f, "{}", id)
         }
     }
