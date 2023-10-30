@@ -193,7 +193,7 @@ impl EnclaveIdentity {
             match raw_id {
                 "QE" => EnclaveId::QE,
                 "QVE" => EnclaveId::QVE,
-                "TD_QE" => EnclaveId::TD_QE,
+                "TD_QE" => EnclaveId::TdQE,
                 _ => EnclaveId::Unknown { id: raw_id.to_owned() },
             }
         };
