@@ -1,12 +1,12 @@
 use intel_tee_quote_verification_sys as qvl_sys;
 use intel_tee_quote_verification_rs as qvl;
 use std::{fs, time};
-use intel_tee_quote_verification_rs::QuoteCollateral;
+use intel_tee_quote_verification_rs::{QuoteCollateral as QVLQuoteCollateral};
 
 pub struct QuoteBag {
     // TODO: Version of the bag
     pub quote: Vec<u8>,
-    pub quote_collateral: QuoteCollateral,
+    pub quote_collateral: QVLQuoteCollateral,
 }
 
 pub fn create_quote_bag(data: &[u8]) -> QuoteBag {
@@ -17,21 +17,23 @@ pub fn create_quote_bag(data: &[u8]) -> QuoteBag {
     println!("Quote hex:");
     println!("0x{}", hex::encode(quote.clone()));
 
-    let quote_collateral = match qvl::tee_qv_get_collateral(&quote) {
+    let qvl_quote_collateral = match qvl::tee_qv_get_collateral(&quote) {
         Ok(r) => r,
         Err(e) => panic!("Error: tee_qv_get_collateral failed: {:#04x}", e as u32)
     };
 
     // TODO: may requires to free collateral
 
+
+
     QuoteBag {
         quote,
-        quote_collateral
+        quote_collateral: qvl_quote_collateral
     }
 }
 
 #[allow(dead_code)]
-pub fn quote_verification(quote: &[u8], quote_collateral: &QuoteCollateral) {
+pub fn quote_verification(quote: &[u8], quote_collateral: &QVLQuoteCollateral) {
     // set current time. This is only for sample purposes, in production mode a trusted time should be used.
     //
     let current_time: u64 = time::SystemTime::now().duration_since(time::SystemTime::UNIX_EPOCH).unwrap().as_secs().try_into().unwrap();

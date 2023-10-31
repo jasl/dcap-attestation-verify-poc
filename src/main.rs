@@ -10,6 +10,7 @@ mod qe_identity;
 mod quote_collateral;
 
 use const_oid::ObjectIdentifier;
+use scale_codec::Decode;
 use x509_cert::Certificate;
 
 use crate::quote::{AttestationKeyType, Quote, QuoteAuthData, QuoteVersion};
@@ -17,6 +18,7 @@ use crate::quote_collateral::QuoteCollateral;
 
 use crate::utils::*;
 use error::Error;
+use crate::tcb::TCBInfo;
 
 pub type MrSigner = [u8; 32];
 pub type MrEnclave = [u8; 32];
@@ -173,25 +175,16 @@ fn get_pce_svn(der: &[u8]) -> Result<PceSvn, Error> {
 }
 
 fn main() -> Result<(), Error> {
-	let quote_collateral = QuoteCollateral {
-		major_version: 3,
-		minor_version: 0,
-		tee_type: 0,
-		pck_crl_issuer_chain: String::from_utf8_lossy(include_bytes!("../sample/quote_collateral/pck_crl_issuer_chain")).to_string(),
-		root_ca_crl: include_bytes!("../sample/quote_collateral/root_ca_crl").to_vec(),
-		pck_crl: include_bytes!("../sample/quote_collateral/pck_crl").to_vec(),
-		tcb_info_issuer_chain: String::from_utf8_lossy(include_bytes!("../sample/quote_collateral/tcb_info_issuer_chain")).to_string(),
-		tcb_info: String::from_utf8_lossy(include_bytes!("../sample/quote_collateral/tcb_info")).to_string(),
-		qe_identity_issuer_chain: String::from_utf8_lossy(include_bytes!("../sample/quote_collateral/qe_identity_issuer_chain")).to_string(),
-		qe_identity: String::from_utf8_lossy(include_bytes!("../sample/quote_collateral/qe_identity")).to_string(),
-	};
+	let mut raw_quote_collateral = include_bytes!("../sample/quote_collateral").to_vec();
+	let quote_collateral = QuoteCollateral::decode(&mut raw_quote_collateral.as_slice()).unwrap();
 
 	println!("= Test parsing TCB info from collateral =");
-	let _ = tcb::TCBInfo::from_json_str(&quote_collateral.tcb_info);
+	let tcb_info = TCBInfo::from_json_str(&quote_collateral.tcb_info).unwrap();
+	println!("{:?}", tcb_info);
 	println!("==========================================");
 
-	let now = 1698266494000u64;
-	let mr_enclave: [u8; 32] = hex::decode("9b62c246eaff2b5493a5c74941d4eb70b700a19edb005cc91fda286a62934048").expect("Hex decodable").try_into().expect("into");
+	let now = 1698708735000u64;
+	let mr_enclave: [u8; 32] = hex::decode("8c1e10b782e84e585c138197e7abdc24a3168028964b70ba4bc69a8456c1ff78").expect("Hex decodable").try_into().expect("into");
 	let mr_signer: [u8; 32] = hex::decode("815f42f11cf64430c30bab7816ba596a1da0130c3b028b673133a66cf9a3e0e6").expect("Hex decodable").try_into().expect("into");
 
 	println!("= Test parsing quote =");

@@ -3,6 +3,23 @@ use std::fs;
 
 mod quote_generator;
 
+use scale_codec::{Encode, Decode};
+use scale_info::TypeInfo;
+
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+pub struct QuoteCollateral {
+    pub major_version: u16,
+    pub minor_version: u16,
+    pub tee_type: u32,
+    pub pck_crl_issuer_chain: String,
+    pub root_ca_crl: String,
+    pub pck_crl: String,
+    pub tcb_info_issuer_chain: String,
+    pub tcb_info: String,
+    pub qe_identity_issuer_chain: String,
+    pub qe_identity: String,
+}
+
 fn main() {
     let quote_bag = quote_generator::create_quote_bag("Hello, world!".as_bytes());
 
@@ -95,42 +112,62 @@ fn main() {
         &quote_bag.quote
     ).unwrap();
 
-    fs::create_dir_all("/data/storage_files/quote_collateral").unwrap();
+    // fs::create_dir_all("/data/storage_files/quote_collateral").unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/version",
+    //     format!("{major_version}.{minor_version}")
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/tee_type",
+    //     format!("{tee_type}")
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/pck_crl_issuer_chain",
+    //     pck_crl_issuer_chain.clone()
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/root_ca_crl",
+    //     root_ca_crl.clone()
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/pck_crl",
+    //     pck_crl.clone()
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/tcb_info_issuer_chain",
+    //     tcb_info_issuer_chain.clone()
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/tcb_info",
+    //     tcb_info.clone()
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/qe_identity_issuer_chain",
+    //     qe_identity_issuer_chain.clone()
+    // ).unwrap();
+    // fs::write(
+    //     "/data/storage_files/quote_collateral/qe_identity",
+    //     qe_identity.clone()
+    // ).unwrap();
+
+    let quote_collateral = QuoteCollateral {
+        major_version,
+        minor_version,
+        tee_type,
+        pck_crl_issuer_chain,
+        root_ca_crl,
+        pck_crl,
+        tcb_info_issuer_chain,
+        tcb_info,
+        qe_identity_issuer_chain,
+        qe_identity,
+    };
+
+    let encoded = quote_collateral.encode();
+    // println!("0x{}", hex::encode(&encoded));
     fs::write(
-        "/data/storage_files/quote_collateral/version",
-        format!("{major_version}.{minor_version}")
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/tee_type",
-        format!("{tee_type}")
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/pck_crl_issuer_chain",
-        pck_crl_issuer_chain
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/root_ca_crl",
-        root_ca_crl
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/pck_crl",
-        pck_crl
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/tcb_info_issuer_chain",
-        tcb_info_issuer_chain
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/tcb_info",
-        tcb_info
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/qe_identity_issuer_chain",
-        qe_identity_issuer_chain
-    ).unwrap();
-    fs::write(
-        "/data/storage_files/quote_collateral/qe_identity",
-        qe_identity
+        "/data/storage_files/quote_collateral",
+        &encoded
     ).unwrap();
 
     println!("Done");

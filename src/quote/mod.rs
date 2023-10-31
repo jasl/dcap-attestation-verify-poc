@@ -205,8 +205,6 @@ impl EnclaveReport {
 
 pub struct CertificationData<'a> {
 	pub data_type: u16,
-	// pub leaf_cert: webpki::EndEntityCert<'a>,
-	// pub intermediate_certs: Vec<webpki::types::CertificateDer<'a>>,
 	pub certs: Vec<webpki::types::CertificateDer<'a>>,
 }
 
@@ -279,9 +277,6 @@ impl<'a> CertificationData<'a> {
 		// )
 	}
 }
-
-pub type Ecdsa256BitSignature = p256::ecdsa::Signature;
-pub type Ecdsa256BitPubkey = p256::ecdsa::VerifyingKey;
 
 #[derive(Debug)]
 pub enum QuoteAuthData<'a> {

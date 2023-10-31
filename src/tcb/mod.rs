@@ -43,7 +43,7 @@ impl fmt::Display for ParseError {
 pub enum TCBVersion {
     V2,
     V3,
-    Unsupported { version: u32 }
+    Unsupported { version: u8 }
 }
 
 impl fmt::Display for TCBVersion {
@@ -100,7 +100,7 @@ impl fmt::Display for TCBStatus {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TCBInfo {
     pub signature: String,
     pub version: TCBVersion,
@@ -133,7 +133,7 @@ impl TCBInfo {
                 .get("version")
                 .expect("TCB Info JSON should has [version] field")
                 .as_u64()
-                .expect("Could not parse [version] field of TCB info JSON to integer") as u32;
+                .expect("Could not parse [version] field of TCB info JSON to integer") as u8;
             match raw_version {
                 2 => TCBVersion::V2,
                 3 => TCBVersion::V3,
@@ -146,13 +146,7 @@ impl TCBInfo {
                     field: "version".to_owned(),
                 }
             )
-        } else if version == TCBVersion::V3 {
-            // TODO: V3 seems TDX, we won't support it for now
-            return Err(
-                ParseError::UnsupportedValue { field: "version".to_owned() }
-            )
         }
-
         let id = {
             let raw_id = {
                 if version == TCBVersion::V3 {
@@ -258,50 +252,26 @@ impl TCBInfo {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TCBLevel {
-    // pub sgx_tcb_component_svn: u32,
-    // pub cpu_svn: &'a [u8; CPU_SVN_SIZE],
-    // pub sgx_tcb_components: &'a [TCBComponent<'a>; SGX_TCB_SVN_COMP_SIZE],
     pub tcb_status: TCBStatus,
     pub tcb_date: DateTime<FixedOffset>,
     pub pce_svn: u32,
-    // TODO: AdvisoryIDs
-    // Components
-    pub sgxtcbcomp01svn: u32,
-    pub sgxtcbcomp02svn: u32,
-    pub sgxtcbcomp03svn: u32,
-    pub sgxtcbcomp04svn: u32,
-    pub sgxtcbcomp05svn: u32,
-    pub sgxtcbcomp06svn: u32,
-    pub sgxtcbcomp07svn: u32,
-    pub sgxtcbcomp08svn: u32,
-    pub sgxtcbcomp09svn: u32,
-    pub sgxtcbcomp10svn: u32,
-    pub sgxtcbcomp11svn: u32,
-    pub sgxtcbcomp12svn: u32,
-    pub sgxtcbcomp13svn: u32,
-    pub sgxtcbcomp14svn: u32,
-    pub sgxtcbcomp15svn: u32,
-    pub sgxtcbcomp16svn: u32,
+    pub advisory_ids: Vec<String>,
+    pub components: [u8; 16],
 }
 
 impl TCBLevel {
     pub fn from_json_value(json: &serde_json::Value, version: &TCBVersion) -> Result<TCBLevel, ParseError> {
-        // TODO: V3 seems TDX, we won't support it for now
-        if *version == TCBVersion::V3 {
-            return Err(
-                ParseError::UnsupportedValue { field: "version".to_owned() }
-            )
-        }
-
         let tcb_level = json.as_object().expect("TCB level should be a JSON object");
 
         let tcb_date = tcb_level.get("tcbDate").expect("TCB Info JSON should has [tcbDate] field");
         let tcb_date = tcb_date.as_str().expect("Could not parse [tcbDate] field of TCB info JSON to string");
         let tcb_date = chrono::DateTime::parse_from_rfc3339(tcb_date).expect("[tcbDate] should be ISO formatted date");
 
-        // TODO: AdvisoryIDs
+        let advisory_ids = tcb_level.get("advisoryIDs").expect("TCB Info JSON should has [advisoryIDs] field");
+        let advisory_ids = advisory_ids.as_array().expect("[advisoryIDs] should be string array");
+        let advisory_ids = advisory_ids.iter().filter_map(|i| i.as_str().map(|i| i.to_string())).collect();
 
         let tcb_status = {
             let raw_tcb_status = tcb_level
@@ -332,97 +302,50 @@ impl TCBLevel {
         let pce_svn = tcb.get("pcesvn").expect("TCB Info JSON should has [pcesvn] field");
         let pce_svn = pce_svn.as_u64().expect("Could not parse [pcesvn] field of TCB info JSON to integer") as u32;
 
-        let sgxtcbcomp01svn = tcb.get("sgxtcbcomp01svn").expect("TCB Info JSON should has [sgxtcbcomp01svn] field");
-        let sgxtcbcomp01svn = sgxtcbcomp01svn.as_u64().expect("Could not parse [sgxtcbcomp01svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp02svn = tcb.get("sgxtcbcomp02svn").expect("TCB Info JSON should has [sgxtcbcomp02svn] field");
-        let sgxtcbcomp02svn = sgxtcbcomp02svn.as_u64().expect("Could not parse [sgxtcbcomp02svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp03svn = tcb.get("sgxtcbcomp03svn").expect("TCB Info JSON should has [sgxtcbcomp03svn] field");
-        let sgxtcbcomp03svn = sgxtcbcomp03svn.as_u64().expect("Could not parse [sgxtcbcomp03svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp04svn = tcb.get("sgxtcbcomp04svn").expect("TCB Info JSON should has [sgxtcbcomp04svn] field");
-        let sgxtcbcomp04svn = sgxtcbcomp04svn.as_u64().expect("Could not parse [sgxtcbcomp04svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp05svn = tcb.get("sgxtcbcomp05svn").expect("TCB Info JSON should has [sgxtcbcomp05svn] field");
-        let sgxtcbcomp05svn = sgxtcbcomp05svn.as_u64().expect("Could not parse [sgxtcbcomp05svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp06svn = tcb.get("sgxtcbcomp06svn").expect("TCB Info JSON should has [sgxtcbcomp06svn] field");
-        let sgxtcbcomp06svn = sgxtcbcomp06svn.as_u64().expect("Could not parse [sgxtcbcomp06svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp07svn = tcb.get("sgxtcbcomp07svn").expect("TCB Info JSON should has [sgxtcbcomp07svn] field");
-        let sgxtcbcomp07svn = sgxtcbcomp07svn.as_u64().expect("Could not parse [sgxtcbcomp07svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp08svn = tcb.get("sgxtcbcomp08svn").expect("TCB Info JSON should has [sgxtcbcomp08svn] field");
-        let sgxtcbcomp08svn = sgxtcbcomp08svn.as_u64().expect("Could not parse [sgxtcbcomp08svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp09svn = tcb.get("sgxtcbcomp09svn").expect("TCB Info JSON should has [sgxtcbcomp09svn] field");
-        let sgxtcbcomp09svn = sgxtcbcomp09svn.as_u64().expect("Could not parse [sgxtcbcomp09svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp10svn = tcb.get("sgxtcbcomp10svn").expect("TCB Info JSON should has [sgxtcbcomp10svn] field");
-        let sgxtcbcomp10svn = sgxtcbcomp10svn.as_u64().expect("Could not parse [sgxtcbcomp10svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp11svn = tcb.get("sgxtcbcomp11svn").expect("TCB Info JSON should has [sgxtcbcomp11svn] field");
-        let sgxtcbcomp11svn = sgxtcbcomp11svn.as_u64().expect("Could not parse [sgxtcbcomp11svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp12svn = tcb.get("sgxtcbcomp12svn").expect("TCB Info JSON should has [sgxtcbcomp12svn] field");
-        let sgxtcbcomp12svn = sgxtcbcomp12svn.as_u64().expect("Could not parse [sgxtcbcomp12svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp13svn = tcb.get("sgxtcbcomp13svn").expect("TCB Info JSON should has [sgxtcbcomp13svn] field");
-        let sgxtcbcomp13svn = sgxtcbcomp13svn.as_u64().expect("Could not parse [sgxtcbcomp13svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp14svn = tcb.get("sgxtcbcomp14svn").expect("TCB Info JSON should has [sgxtcbcomp14svn] field");
-        let sgxtcbcomp14svn = sgxtcbcomp14svn.as_u64().expect("Could not parse [sgxtcbcomp14svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp15svn = tcb.get("sgxtcbcomp15svn").expect("TCB Info JSON should has [sgxtcbcomp15svn] field");
-        let sgxtcbcomp15svn = sgxtcbcomp15svn.as_u64().expect("Could not parse [sgxtcbcomp15svn] field of TCB info JSON to integer") as u32;
-
-        let sgxtcbcomp16svn = tcb.get("sgxtcbcomp16svn").expect("TCB Info JSON should has [sgxtcbcomp16svn] field");
-        let sgxtcbcomp16svn = sgxtcbcomp16svn.as_u64().expect("Could not parse [sgxtcbcomp16svn] field of TCB info JSON to integer") as u32;
+        let tcb_components = tcb.get("sgxtcbcomponents").expect("TCB Info JSON should has [sgxtcbcomponents] field");
+        let tcb_components = tcb_components.as_array().expect("[sgxtcbcomponents] should be an array");
+        let tcb_components: Vec<_> = tcb_components
+            .iter()
+            .map(|i| {
+                let Some(i) = i.as_object() else {
+                    return None
+                };
+                let Some(i) = i.get("svn") else {
+                    return None
+                };
+                let Some(i) = i.as_u64() else {
+                    return None
+                };
+                Some(i as u8)
+            }).collect();
+        let mut components = [0u8; 16];
+        for i in 0..15 {
+            match &tcb_components[i] {
+                Some(svn) => {
+                    components[i] = *svn;
+                },
+                None => {
+                    return Err(
+                        ParseError::InvalidValue { field: "sgxtcbcomponents".to_owned() }
+                    )
+                }
+            };
+        }
 
         println!("- Parsed TCB Level -");
         println!("TCB Status: {}", tcb_status);
         println!("TCB Date: {}", tcb_date);
         println!("PCE SVN: {}", pce_svn);
-        println!("sgxtcbcomp01svn: {}", sgxtcbcomp01svn);
-        println!("sgxtcbcomp02svn: {}", sgxtcbcomp02svn);
-        println!("sgxtcbcomp03svn: {}", sgxtcbcomp03svn);
-        println!("sgxtcbcomp04svn: {}", sgxtcbcomp04svn);
-        println!("sgxtcbcomp05svn: {}", sgxtcbcomp05svn);
-        println!("sgxtcbcomp06svn: {}", sgxtcbcomp06svn);
-        println!("sgxtcbcomp07svn: {}", sgxtcbcomp07svn);
-        println!("sgxtcbcomp08svn: {}", sgxtcbcomp08svn);
-        println!("sgxtcbcomp09svn: {}", sgxtcbcomp09svn);
-        println!("sgxtcbcomp10svn: {}", sgxtcbcomp10svn);
-        println!("sgxtcbcomp11svn: {}", sgxtcbcomp11svn);
-        println!("sgxtcbcomp12svn: {}", sgxtcbcomp12svn);
-        println!("sgxtcbcomp13svn: {}", sgxtcbcomp13svn);
-        println!("sgxtcbcomp14svn: {}", sgxtcbcomp14svn);
-        println!("sgxtcbcomp15svn: {}", sgxtcbcomp15svn);
-        println!("sgxtcbcomp16svn: {}", sgxtcbcomp16svn);
+        println!("Components: {:?}", components);
         println!("---------------------");
 
         Ok(
             Self {
                 tcb_status,
                 tcb_date,
+                advisory_ids,
                 pce_svn,
-                sgxtcbcomp01svn,
-                sgxtcbcomp02svn,
-                sgxtcbcomp03svn,
-                sgxtcbcomp04svn,
-                sgxtcbcomp05svn,
-                sgxtcbcomp06svn,
-                sgxtcbcomp07svn,
-                sgxtcbcomp08svn,
-                sgxtcbcomp09svn,
-                sgxtcbcomp10svn,
-                sgxtcbcomp11svn,
-                sgxtcbcomp12svn,
-                sgxtcbcomp13svn,
-                sgxtcbcomp14svn,
-                sgxtcbcomp15svn,
-                sgxtcbcomp16svn,
+                components
             }
         )
     }

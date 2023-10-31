@@ -12,14 +12,13 @@ chrono = { version = "0.4.31", default-features = false, features = ["alloc", "s
 serde = { version = "1.0.188", default-features = false, features = ["alloc", "derive"] }
 serde_json = { version = "1.0.107", default-features = false, features = ["alloc"] }
 
+scale-codec = { version = "3.6.5", package = "parity-scale-codec", default-features = false, features = ["derive"] }
+scale-info = { version = "2.10.0", default-features = false, features = ["derive"] }
 ring = { version = "0.17.5", default-features = false, features = ["alloc"] }
 webpki = { package = "rustls-webpki", git = "https://github.com/rustls/webpki.git", default-features = false, features = ["alloc", "ring"] }
 const-oid = { version = "0.9.5", default-features = false }
 der = { version = "0.7.8", default-features = false }
 x509-cert = { version = "0.2.4", default-features = false }
-
-ecdsa = { version = "0.16.8", default-features = false, features = ["alloc", "pem"] }
-p256 = { version = "0.13.2", default-features = false, features = ["arithmetic", "ecdsa", "pkcs8"] }
 
 log = { version = "0.4.20", default-features = false }
 anyhow = "1.0.75"
