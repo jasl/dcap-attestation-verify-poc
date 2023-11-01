@@ -245,15 +245,9 @@ impl<'a> CertificationData<'a> {
 		println!("data_size: {}", data_size);
 		println!("----------------------");
 
-		let raw_certs = extract_certs(data);
-		if raw_certs.len() < 2 {
+		let certs = extract_certs(data);
+		if certs.len() < 2 {
 			return Err(ParseError::InvalidValue { field: "data".to_string() });
-		}
-
-		let mut certs = Vec::<webpki::types::CertificateDer<'a>>::new();
-		for raw_cert in raw_certs.iter() {
-			let cert = webpki::types::CertificateDer::<'a>::from(raw_cert.to_vec());
-			certs.push(cert);
 		}
 
 		Ok(

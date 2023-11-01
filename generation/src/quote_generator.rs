@@ -22,10 +22,6 @@ pub fn create_quote_bag(data: &[u8]) -> QuoteBag {
         Err(e) => panic!("Error: tee_qv_get_collateral failed: {:#04x}", e as u32)
     };
 
-    // TODO: may requires to free collateral
-
-
-
     QuoteBag {
         quote,
         quote_collateral: qvl_quote_collateral

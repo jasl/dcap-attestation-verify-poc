@@ -102,7 +102,6 @@ impl fmt::Display for TCBStatus {
 
 #[derive(Clone, Debug)]
 pub struct TCBInfo {
-    pub signature: String,
     pub version: TCBVersion,
     pub id: TCBId,
     pub issue_date: DateTime<FixedOffset>,
@@ -117,16 +116,8 @@ pub struct TCBInfo {
 
 impl TCBInfo {
     pub fn from_json_str(json_str: &str) -> Result<Self, ParseError> {
-        let tcb_info_json: serde_json::Value = serde_json::from_str(json_str).expect("Could not parse TCB info JSON");
-        let tcb_info_json = tcb_info_json.as_object().expect("TCB info JSON should be an object");
-
-        let tcb_info = tcb_info_json.get("tcbInfo").expect("Missing [tcbInfo] field of TCB info JSON");
+        let tcb_info: serde_json::Value = serde_json::from_str(json_str).expect("Could not parse TCB info JSON");
         let tcb_info = tcb_info.as_object().expect("TCB info JSON should be an object");
-
-        let signature = tcb_info_json.get("signature").expect("Missing [signature] field of TCB info JSON");
-        let signature = signature.as_str().expect("Could not parse [signature] field of TCB info JSON to string");
-        let signature = signature.to_owned();
-        // TODO: validate length
 
         let version = {
             let raw_version = tcb_info
@@ -212,7 +203,6 @@ impl TCBInfo {
         let pce_id = hex::decode(pce_id).expect("Could not parse [pceId] field of TCB info JSON to bytes");
 
         println!("= Parsed TCB info =");
-        println!("Signature: {}", signature);
         println!("Version: {}", version);
         println!("Id: {}", id);
         println!("Issue date: {}", issue_date);
@@ -237,7 +227,6 @@ impl TCBInfo {
 
         Ok(
             Self {
-                signature,
                 version,
                 id,
                 issue_date,

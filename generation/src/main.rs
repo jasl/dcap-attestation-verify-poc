@@ -16,8 +16,10 @@ pub struct QuoteCollateral {
     pub pck_crl: String,
     pub tcb_info_issuer_chain: String,
     pub tcb_info: String,
+    pub tcb_info_signature: Vec<u8>,
     pub qe_identity_issuer_chain: String,
     pub qe_identity: String,
+    pub qe_identity_signature: Vec<u8>,
 }
 
 fn main() {
@@ -80,12 +82,18 @@ fn main() {
     println!("Collateral TCB info size:");
     println!("{}", quote_collateral.tcb_info.len());
     println!("Collateral TCB info data:");
-    let tcb_info = {
+    let raw_tcb_info = {
         let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.tcb_info.as_ptr()) };
         let str_slice: &str = c_str.to_str().expect("TCB Info should an UTF-8 string");
         str_slice.to_owned()
     };
-    println!("{}", tcb_info);
+    println!("{}", raw_tcb_info);
+    let tcb_info_json: serde_json::Value = serde_json::from_str(raw_tcb_info.as_str()).expect("TCB Info should a JSON");
+    let tcb_info = tcb_info_json["tcbInfo"].to_string();
+    let tcb_info_signature = tcb_info_json["signature"].as_str().expect("TCB Info signature should a hex string");
+    let tcb_info_signature = hex::decode(tcb_info_signature).expect("TCB Info signature should a hex string");
+    println!("{tcb_info}");
+    println!("{}", hex::encode(&tcb_info_signature));
 
     println!("Collateral QE identity issuer chain size:");
     println!("{}", quote_collateral.qe_identity_issuer_chain.len());
@@ -100,12 +108,18 @@ fn main() {
     println!("Collateral QE Identity size:");
     println!("{}", quote_collateral.qe_identity.len());
     println!("Collateral QE identity data:");
-    let qe_identity = {
+    let raw_qe_identity = {
         let c_str: &CStr = unsafe { CStr::from_ptr(quote_collateral.qe_identity.as_ptr()) };
         let str_slice: &str = c_str.to_str().expect("QE Identity should an UTF-8 string");
         str_slice.to_owned()
     };
-    println!("{}", qe_identity);
+    println!("{}", raw_qe_identity);
+    let qe_identity_json: serde_json::Value = serde_json::from_str(raw_qe_identity.as_str()).expect("QE Identity should a JSON");
+    let qe_identity = qe_identity_json["enclaveIdentity"].to_string();
+    let qe_identity_signature = qe_identity_json["signature"].as_str().expect("QE Identity signature should a hex string");
+    let qe_identity_signature = hex::decode(qe_identity_signature).expect("QE Identity signature should a hex string");
+    println!("{qe_identity}");
+    println!("{}", hex::encode(&qe_identity_signature));
 
     fs::write(
         "/data/storage_files/quote",
@@ -159,8 +173,10 @@ fn main() {
         pck_crl,
         tcb_info_issuer_chain,
         tcb_info,
+        tcb_info_signature,
         qe_identity_issuer_chain,
         qe_identity,
+        qe_identity_signature,
     };
 
     let encoded = quote_collateral.encode();

@@ -11,6 +11,8 @@ pub struct QuoteCollateral {
     pub pck_crl: String,
     pub tcb_info_issuer_chain: String,
     pub tcb_info: String,
+    pub tcb_info_signature: Vec<u8>,
     pub qe_identity_issuer_chain: String,
     pub qe_identity: String,
+    pub qe_identity_signature: Vec<u8>,
 }

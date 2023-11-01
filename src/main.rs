@@ -183,14 +183,38 @@ fn main() -> Result<(), Error> {
 	println!("{:?}", tcb_info);
 	println!("==========================================");
 
-	let now = 1698708735000u64;
-	let mr_enclave: [u8; 32] = hex::decode("8c1e10b782e84e585c138197e7abdc24a3168028964b70ba4bc69a8456c1ff78").expect("Hex decodable").try_into().expect("into");
+	let now = 1698879721000u64;
+	let mr_enclave: [u8; 32] = hex::decode("a43e1faad96ba329a7cf7595b37fe5800ef957615410c7294204c73fde50cd25").expect("Hex decodable").try_into().expect("into");
 	let mr_signer: [u8; 32] = hex::decode("815f42f11cf64430c30bab7816ba596a1da0130c3b028b673133a66cf9a3e0e6").expect("Hex decodable").try_into().expect("into");
 
 	println!("= Test parsing quote =");
 	let raw_quote = include_bytes!("../sample/quote").to_vec();
 	let quote = Quote::parse(&raw_quote).expect("Quote decodable");
 	println!("======================");
+
+	let leaf_certs = extract_certs(quote_collateral.qe_identity_issuer_chain.as_bytes());
+	let leaf_cert: webpki::EndEntityCert =
+		webpki::EndEntityCert::try_from(&leaf_certs[0]).map_err(|_| Error::LeafCertificateParsingError)?;
+	let intermediate_certs = &leaf_certs[1..];
+	if let Err(err) = verify_certificate_chain(&leaf_cert, &intermediate_certs, now) {
+		return Err(err);
+	}
+	let signature = encode_as_der(&quote_collateral.qe_identity_signature)?;
+	if leaf_cert.verify_signature(webpki::ring::ECDSA_P256_SHA256, &quote_collateral.qe_identity.as_bytes(), &signature).is_err() {
+		return Err(Error::RsaSignatureIsInvalid)
+	}
+
+	let leaf_certs = extract_certs(quote_collateral.tcb_info_issuer_chain.as_bytes());
+	let leaf_cert: webpki::EndEntityCert =
+		webpki::EndEntityCert::try_from(&leaf_certs[0]).map_err(|_| Error::LeafCertificateParsingError)?;
+	let intermediate_certs = &leaf_certs[1..];
+	if let Err(err) = verify_certificate_chain(&leaf_cert, &intermediate_certs, now) {
+		return Err(err);
+	}
+	let asn1_signature = encode_as_der(&quote_collateral.tcb_info_signature)?;
+	if leaf_cert.verify_signature(webpki::ring::ECDSA_P256_SHA256, &quote_collateral.tcb_info.as_bytes(), &asn1_signature).is_err() {
+		return Err(Error::RsaSignatureIsInvalid)
+	}
 
 	// let current_time: u64 = std::time::SystemTime::now().duration_since(std::time::SystemTime::UNIX_EPOCH).unwrap().as_secs().try_into().unwrap();
 	// quote_verifier::sgx_qv_verify_quote(&quote, quote_collateral, current_time);
@@ -215,9 +239,11 @@ fn main() -> Result<(), Error> {
 		return Err(Error::UnsupportedDCAPPckCertFormat);
 	}
 
+	println!("{}", hex::encode(&quote.enclave_report.mr_enclave));
 	if quote.enclave_report.mr_enclave != mr_enclave {
 		return Err(Error::UnknownMREnclave);
 	}
+	println!("{}", hex::encode(&quote.enclave_report.mr_signer));
 	if quote.enclave_report.mr_signer != mr_signer {
 		return Err(Error::UnknownMRSigner);
 	}

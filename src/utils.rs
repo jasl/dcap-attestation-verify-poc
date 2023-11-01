@@ -31,7 +31,7 @@ pub static DCAP_SERVER_ROOTS: &[webpki::types::TrustAnchor<'static>; 1] = &[
 
 /// Extract a list of certificates from a byte vec. The certificates must be separated by
 /// `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` markers
-pub fn extract_certs(cert_chain: &[u8]) -> Vec<Vec<u8>> {
+pub fn extract_raw_certs(cert_chain: &[u8]) -> Vec<Vec<u8>> {
 	// The certificates should be valid UTF-8 but if not we skip the invalid cert. The certificate verification
 	// will fail at a later point.
 	let certs_concat = String::from_utf8_lossy(cert_chain);
@@ -40,6 +40,18 @@ pub fn extract_certs(cert_chain: &[u8]) -> Vec<Vec<u8>> {
 	// Use the end marker to split the string into certificates
 	let parts = certs_concat.split("-----END CERTIFICATE-----");
 	parts.filter(|p| !p.is_empty()).filter_map(|p| general_purpose::STANDARD.decode(p).ok()).collect()
+}
+
+pub fn extract_certs<'a>(cert_chain: &'a [u8]) -> Vec<CertificateDer<'a>> {
+	let mut certs = Vec::<CertificateDer<'a>>::new();
+
+	let raw_certs = extract_raw_certs(cert_chain);
+	for raw_cert in raw_certs.iter() {
+		let cert = webpki::types::CertificateDer::<'a>::from(raw_cert.to_vec());
+		certs.push(cert);
+	}
+
+	certs
 }
 
 /// Encode two 32-byte values in DER format
