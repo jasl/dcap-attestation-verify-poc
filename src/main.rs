@@ -193,6 +193,9 @@ fn main() -> Result<(), Error> {
 	println!("======================");
 
 	let leaf_certs = extract_certs(quote_collateral.qe_identity_issuer_chain.as_bytes());
+	if leaf_certs.len() < 2 {
+		return Err(Error::CertificateChainIsTooShort);
+	}
 	let leaf_cert: webpki::EndEntityCert =
 		webpki::EndEntityCert::try_from(&leaf_certs[0]).map_err(|_| Error::LeafCertificateParsingError)?;
 	let intermediate_certs = &leaf_certs[1..];
@@ -205,6 +208,9 @@ fn main() -> Result<(), Error> {
 	}
 
 	let leaf_certs = extract_certs(quote_collateral.tcb_info_issuer_chain.as_bytes());
+	if leaf_certs.len() < 2 {
+		return Err(Error::CertificateChainIsTooShort);
+	}
 	let leaf_cert: webpki::EndEntityCert =
 		webpki::EndEntityCert::try_from(&leaf_certs[0]).map_err(|_| Error::LeafCertificateParsingError)?;
 	let intermediate_certs = &leaf_certs[1..];
