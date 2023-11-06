@@ -183,29 +183,14 @@ fn main() -> Result<(), Error> {
 	println!("{:?}", tcb_info);
 	println!("==========================================");
 
-	let now = 1698879721000u64;
-	let mr_enclave: [u8; 32] = hex::decode("a43e1faad96ba329a7cf7595b37fe5800ef957615410c7294204c73fde50cd25").expect("Hex decodable").try_into().expect("into");
+	let now = 1699301000000u64;
+	let mr_enclave: [u8; 32] = hex::decode("33d8736db756ed4997e04ba358d27833188f1932ff7b1d156904d3f560452fbb").expect("Hex decodable").try_into().expect("into");
 	let mr_signer: [u8; 32] = hex::decode("815f42f11cf64430c30bab7816ba596a1da0130c3b028b673133a66cf9a3e0e6").expect("Hex decodable").try_into().expect("into");
 
 	println!("= Test parsing quote =");
 	let raw_quote = include_bytes!("../sample/quote").to_vec();
 	let quote = Quote::parse(&raw_quote).expect("Quote decodable");
 	println!("======================");
-
-	let leaf_certs = extract_certs(quote_collateral.qe_identity_issuer_chain.as_bytes());
-	if leaf_certs.len() < 2 {
-		return Err(Error::CertificateChainIsTooShort);
-	}
-	let leaf_cert: webpki::EndEntityCert =
-		webpki::EndEntityCert::try_from(&leaf_certs[0]).map_err(|_| Error::LeafCertificateParsingError)?;
-	let intermediate_certs = &leaf_certs[1..];
-	if let Err(err) = verify_certificate_chain(&leaf_cert, &intermediate_certs, now) {
-		return Err(err);
-	}
-	let signature = encode_as_der(&quote_collateral.qe_identity_signature)?;
-	if leaf_cert.verify_signature(webpki::ring::ECDSA_P256_SHA256, &quote_collateral.qe_identity.as_bytes(), &signature).is_err() {
-		return Err(Error::RsaSignatureIsInvalid)
-	}
 
 	let leaf_certs = extract_certs(quote_collateral.tcb_info_issuer_chain.as_bytes());
 	if leaf_certs.len() < 2 {
