@@ -2,6 +2,14 @@
 pub enum Error {
 	#[error("ParseError")]
 	ParseError,
+	#[error("RawDataInvalid")]
+	RawDataInvalid,
+	#[error("MissingField: {field}")]
+	MissingField { field: String },
+	#[error("InvalidField: {field}")]
+	InvalidFieldValue { field: String },
+	#[error("UnsupportedFieldValue: {field}")]
+	UnsupportedFieldValue { field: String },
 	#[error("KeyLengthIsInvalid")]
 	KeyLengthIsInvalid,
 	#[error("PublicKeyIsInvalid")]
@@ -22,12 +30,8 @@ pub enum Error {
 	UnsupportedQuoteAuthData,
 	#[error("UnsupportedDCAPPckCertFormat")]
 	UnsupportedDCAPPckCertFormat,
-	#[error("EnclaveRejectedByQE")]
-	EnclaveRejectedByQE,
 	#[error("LeafCertificateParsingError")]
 	LeafCertificateParsingError,
-	#[error("IntermediateCertificateParsingError")]
-	IntermediateCertificateParsingError,
 	#[error("CertificateChainIsInvalid")]
 	CertificateChainIsInvalid,
 	#[error("CertificateChainIsTooShort")]
@@ -36,12 +40,6 @@ pub enum Error {
 	IntelExtensionCertificateDecodingError,
 	#[error("IntelExtensionAmbiguity")]
 	IntelExtensionAmbiguity,
-	#[error("FmspcOidIsMissing")]
-	FmspcOidIsMissing,
-	#[error("FmspcLengthMismatch")]
-	FmspcLengthMismatch,
-	#[error("FmspcDecodingError")]
-	FmspcDecodingError,
 	#[error("CpuSvnOidIsMissing")]
 	CpuSvnOidIsMissing,
 	#[error("CpuSvnLengthMismatch")]
