@@ -304,7 +304,8 @@ checksum = "a47003264dea418db67060fa420ad16d0d2f8f0a0360d825c00e177ac52cb5d8"
 [[package]]
 name = "rustls-webpki"
 version = "0.102.0-alpha.6"
-source = "git+https://github.com/rustls/webpki.git#24facb040052bfffa2ed85cec97292ae2359e0c9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34d9ed3a8267782ba32d257ff5b197b63eef19a467dbd1be011caaae35ee416e"
 dependencies = [
  "ring",
  "rustls-pki-types",
