@@ -143,17 +143,8 @@ fn main() -> Result<(), Error> {
 	let mut advisory_ids = Vec::<String>::new();
 	for tcb_level in &tcb_info.tcb_levels {
 		if pce_svn >= tcb_level.pce_svn {
-			let mut selected = true;
-			for i in 0..15 { // constant?
-				// println!("[{}] QE SVN: {}, TCB LEVEL SVN: {}", i, parsed_qe_report.cpu_svn[i], tcb_level.components[i]);
-
-				if cpu_svn[i] < tcb_level.components[i] {
-					selected = false;
-					break;
-				}
-			}
-			if !selected {
-				continue;
+			if cpu_svn.iter().zip(&tcb_level.components).any(|(a, b)| a < &b) {
+				continue
 			}
 
 			tcb_status = tcb_level.tcb_status.clone();
